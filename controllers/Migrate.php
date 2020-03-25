@@ -28,6 +28,16 @@ class Migrate extends CI_Controller {
 		}
 	}
 
+	public function latest()
+	{
+		$migration = $this->migration->latest();
+		if (!$migration) {
+			echo $this->migration->error_string()."\n";
+		} else {
+			echo "Migration done." . PHP_EOL;
+		}
+	}
+
 	public function generate($name=false)
 	{
 		if (!$name) {
