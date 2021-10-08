@@ -16,6 +16,9 @@ class Migrate extends CI_Controller {
 		$this->load->library('migration');
 		$this->load->config('migration');
 		$this->migration_path = $this->config->item('migration_path');
+
+		//seeder
+		$this->load->config('seeder', TRUE);
 	}
 
 	public function version($version=null)
@@ -34,7 +37,7 @@ class Migrate extends CI_Controller {
 		if (!$migration) {
 			echo $this->migration->error_string()."\n";
 		} else {
-			echo "Migration done." . PHP_EOL;
+			echo "Migration done to version: ".$migration . PHP_EOL;
 		}
 	}
 
@@ -87,6 +90,7 @@ class Migration_".ucwords($name)." extends CI_Migration {
 	{
 		
 	}
+
 	public function down()
 	{
 		
@@ -110,6 +114,18 @@ class Migration_".ucwords($name)." extends CI_Migration {
 			echo "Migration file written!\n";
 		}
 	}
+
+	public function seed()
+    {
+        $this->load->library('seeder');
+        $path = rtrim($this->config->item('seeder_path', 'seeder'), '/');
+        foreach (glob($path . '/*Seeder.php') as $file) {
+            $seeder = basename($file, '.php');
+            $this->seeder->call($seeder);
+
+            echo "Seeder done: ". $seeder . PHP_EOL;
+        }
+    }
 
 }
 
