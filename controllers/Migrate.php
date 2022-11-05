@@ -16,28 +16,54 @@ class Migrate extends CI_Controller {
 		$this->load->library('migration');
 		$this->load->config('migration');
 		$this->migration_path = $this->config->item('migration_path');
-
-		//seeder
-		$this->load->config('seeder', TRUE);
 	}
 
 	public function version($version=null)
 	{
+		if ($version === null) {
+			$current_version = $this->migration->get_version();
+			echo "Current version is " . $current_version .'.' . PHP_EOL;
+			die;
+		}
+
+
+		//migrate to latest version
+		if ($version === 'latest') {
+			$this->latest();
+			die;
+		}
+
+		//check version is valid
+		$version = $this->migration->get_migration_number($version);
+		if (empty($version) && $version !== '0') {
+			echo "Version invalid or not found." .PHP_EOL;
+			die;
+		}
+
+		//migrate to specific version
+		print("Migrating to: ".$version . "\n");
 		$migration = $this->migration->version($version);
-		if (!$migration) {
-			echo $this->migration->error_string()."\n";
+		
+
+
+		//migration status
+		if ($migration) {
+			echo "Migration done to version: " . $version . PHP_EOL;
 		} else {
-			echo "Migration done." . PHP_EOL;
+			echo $this->migration->error_string()."\n";
 		}
 	}
 
 	public function latest()
 	{
+		print("Migrating to: latest\n");
 		$migration = $this->migration->latest();
-		if (!$migration) {
-			echo $this->migration->error_string()."\n";
+		if ($migration) {
+			$version = $this->migration->find_migrations();
+			$version = array_key_last($version);
+			echo "Migration done to version: ".$version . PHP_EOL;
 		} else {
-			echo "Migration done to version: ".$migration . PHP_EOL;
+			echo $this->migration->error_string()."\n";
 		}
 	}
 
@@ -116,16 +142,16 @@ class Migration_".ucwords($name)." extends CI_Migration {
 	}
 
 	public function seed()
-    {
-        $this->load->library('seeder');
-        $path = rtrim($this->config->item('seeder_path', 'seeder'), '/');
-        foreach (glob($path . '/*Seeder.php') as $file) {
-            $seeder = basename($file, '.php');
-            $this->seeder->call($seeder);
-
-            echo "Seeder done: ". $seeder . PHP_EOL;
-        }
-    }
+	{
+		$this->load->library('seeder');
+		$path = rtrim($this->config->item('seeder_path', 'seeder'), '/');
+		foreach (glob($path . '/*Seeder.php') as $file) {
+			$seeder = basename($file, '.php');
+			$this->seeder->call($seeder);
+			
+			echo "Seeder done: ". $seeder . PHP_EOL;
+		}
+	}
 
 }
 
